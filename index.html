@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>E Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f2f5;
+    }
+
+    .app-container {
+      text-align: center;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .logo {
+      width: 150px;
+      margin-bottom: 2rem;
+    }
+
+    form div {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+    }
+
+    input {
+      width: calc(100% - 20px);
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button[type="submit"] {
+      background-color: #007bff;
+      color: #fff;
+    }
+
+    button:not([type="submit"]) {
+      background-color: transparent;
+      color: #007bff;
+      border: 1px solid #007bff;
+    }
+
+    /* Main App Page Styling */
+    .main-app-container {
+      width: 100%;
+      padding: 1rem;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .user-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .user-item {
+      background-color: #fff;
+      padding: 1rem;
+      margin-bottom: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SignIn = ({ onSwitchToSignUp, onSwitchToForgotPassword, onSwitchToAdminLogin, scriptURL, onSignInSuccess }) => {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [message, setMessage] = useState('');
+
+      const handleSubmit = async (event) => {
+        event.preventDefault();
+        setMessage('');
+
+        const userData = { username, password };
+        const requestBody = {
+          action: 'signIn',
+          userData: userData,
+        };
+
+        try {
+          const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setMessage('Sign in successful!');
+            onSignInSuccess();
+          } else {
+            setMessage(data.message);
+          }
+        } catch (error) {
+          setMessage('Error: ' + error.message);
+        }
+      };
+
+      return (
+        <div>
+          <h2>Sign In to E Chat</h2>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit">Sign In</button>
+          </form>
+          {message && <p>{message}</p>}
+          <button onClick={onSwitchToSignUp}>Don't have an account? Sign Up</button>
+          <button onClick={onSwitchToForgotPassword}>Forgot Password?</button>
+          <button onClick={onSwitchToAdminLogin}>Admin Login</button>
+        </div>
+      );
+    };
+
+    const SignUp = ({ onSwitchToSignIn, scriptURL }) => {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [reEnterPassword, setReEnterPassword] = useState('');
+      const [age, setAge] = useState('');
+      const [recoveryPhrase, setRecoveryPhrase] = useState('');
+      const [message, setMessage] = useState('');
+
+      const handleSubmit = async (event) => {
+        event.preventDefault();
+        setMessage('');
+
+        if (password !== reEnterPassword) {
+          setMessage("Passwords don't match!");
+          return;
+        }
+
+        const userData = { username, password, age, recoveryPhrase };
+        const requestBody = {
+          action: 'signUp',
+          userData: userData,
+        };
+
+        try {
+          const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setMessage('Sign up successful! You can now sign in.');
+          } else {
+            setMessage(data.message);
+          }
+        } catch (error) {
+          setMessage('Error: ' + error.message);
+        }
+      };
+
+      return (
+        <div>
+          <h2>Sign Up for E Chat</h2>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Re-enter Password:</label>
+              <input
+                type="password"
+                value={reEnterPassword}
+                onChange={(e) => setReEnterPassword(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Age:</label>
+              <input
+                type="number"
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Account Recovery Phrase:</label>
+              <input
+                type="text"
+                value={recoveryPhrase}
+                onChange={(e) => setRecoveryPhrase(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit">Sign Up</button>
+          </form>
+          {message && <p>{message}</p>}
+          <button onClick={onSwitchToSignIn}>Already have an account? Sign In</button>
+        </div>
+      );
+    };
+
+    const ForgotPassword = ({ onSwitchToSignIn, scriptURL }) => {
+      const [username, setUsername] = useState('');
+      const [recoveryPhrase, setRecoveryPhrase] = useState('');
+      const [message, setMessage] = useState('');
+
+      const handleSubmit = async (event) => {
+        event.preventDefault();
+        setMessage('');
+
+        const userData = { username, recoveryPhrase };
+        const requestBody = {
+          action: 'forgotPassword',
+          userData: userData,
+        };
+
+        try {
+          const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setMessage('Password recovered! Your password is: ' + data.password);
+          } else {
+            setMessage(data.message);
+          }
+        } catch (error) {
+          setMessage('Error: ' + error.message);
+        }
+      };
+
+      return (
+        <div>
+          <h2>Forgot Password</h2>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Recovery Phrase:</label>
+              <input
+                type="text"
+                value={recoveryPhrase}
+                onChange={(e) => setRecoveryPhrase(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit">Recover Password</button>
+          </form>
+          {message && <p>{message}</p>}
+          <button onClick={onSwitchToSignIn}>Back to Sign In</button>
+        </div>
+      );
+    };
+    
+    // New component for admin login
+    const AdminLogin = ({ onSwitchToSignIn, onAdminLoginSuccess, scriptURL }) => {
+      const [username, setUsername] = useState('');
+      const [password, setPassword] = useState('');
+      const [message, setMessage] = useState('');
+
+      const handleSubmit = async (event) => {
+        event.preventDefault();
+        setMessage('');
+
+        const userData = { username, password };
+        const requestBody = {
+          action: 'adminLogin',
+          userData: userData,
+        };
+
+        try {
+          const response = await fetch(scriptURL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+          if (data.success) {
+            setMessage('Admin login successful!');
+            onAdminLoginSuccess();
+          } else {
+            setMessage(data.message);
+          }
+        } catch (error) {
+          setMessage('Error: ' + error.message);
+        }
+      };
+
+      return (
+        <div>
+          <h2>Admin Login</h2>
+          <form onSubmit={handleSubmit}>
+            <div>
+              <label>Username:</label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </div>
+            <div>
+              <label>Password:</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </div>
+            <button type="submit">Log In</button>
+          </form>
+          {message && <p>{message}</p>}
+          <button onClick={onSwitchToSignIn}>Back to User Sign In</button>
+        </div>
+      );
+    };
+    
+    // New placeholder component for the admin dashboard
+    const AdminDashboard = ({ onSignOut }) => {
+      return (
+        <div>
+          <h2>Admin Dashboard</h2>
+          <p>This is the admin control panel. More features coming soon!</p>
+          <button onClick={onSignOut}>Sign Out</button>
+        </div>
+      );
+    };
+
+    const MainApp = ({ onSignOut, scriptURL }) => {
+      const [users, setUsers] = useState([]);
+      const [message, setMessage] = useState('');
+
+      useEffect(() => {
+        const fetchUsers = async () => {
+          setMessage('Loading users...');
+          const requestBody = {
+            action: 'getUsers',
+          };
+
+          try {
+            const response = await fetch(scriptURL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(requestBody),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              setUsers(data.users);
+              setMessage('');
+            } else {
+              setMessage(data.message);
+            }
+          } catch (error) {
+            setMessage('Error fetching users: ' + error.message);
+          }
+        };
+
+        fetchUsers();
+      }, [scriptURL]);
+
+      return (
+        <div className="main-app-container">
+          <div className="header">
+            <h2>Users</h2>
+            <button onClick={onSignOut}>Sign Out</button>
+          </div>
+          {message && <p>{message}</p>}
+          <ul className="user-list">
+            {users.length > 0 ? (
+              users.map((user, index) => (
+                <li key={index} className="user-item">
+                  {user.username}
+                </li>
+              ))
+            ) : (
+              <p>No users found.</p>
+            )}
+          </ul>
+        </div>
+      );
+    };
+
+    const App = () => {
+      const [view, setView] = useState('signIn');
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false); // New state for admin login
+      // PASTE YOUR GOOGLE APPS SCRIPT URL HERE
+      const scriptURL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+      const handleSignInSuccess = () => {
+        setIsLoggedIn(true);
+      };
+
+      const handleSignOut = () => {
+        setIsLoggedIn(false);
+        setIsAdminLoggedIn(false); // Reset both states on sign out
+        setView('signIn');
+      };
+      
+      const handleAdminLoginSuccess = () => {
+        setIsAdminLoggedIn(true);
+      };
+
+      const renderView = () => {
+        if (isAdminLoggedIn) {
+          return <AdminDashboard onSignOut={handleSignOut} />;
+        }
+        
+        if (isLoggedIn) {
+          return <MainApp onSignOut={handleSignOut} scriptURL={scriptURL} />;
+        }
+
+        switch (view) {
+          case 'signUp':
+            return <SignUp onSwitchToSignIn={() => setView('signIn')} scriptURL={scriptURL} />;
+          case 'forgotPassword':
+            return <ForgotPassword onSwitchToSignIn={() => setView('signIn')} scriptURL={scriptURL} />;
+          case 'adminLogin':
+            return <AdminLogin onSwitchToSignIn={() => setView('signIn')} onAdminLoginSuccess={handleAdminLoginSuccess} scriptURL={scriptURL} />;
+          case 'signIn':
+          default:
+            return (
+              <SignIn
+                onSwitchToSignUp={() => setView('signUp')}
+                onSwitchToForgotPassword={() => setView('forgotPassword')}
+                onSwitchToAdminLogin={() => setView('adminLogin')}
+                scriptURL={scriptURL}
+                onSignInSuccess={handleSignInSuccess}
+              />
+            );
+        }
+      };
+
+      return (
+        <div className="app-container">
+          <img src="logo1.png" alt="E Chat Logo" className="logo1" />
+          {renderView()}
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
